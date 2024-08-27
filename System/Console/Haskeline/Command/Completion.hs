@@ -14,6 +14,7 @@ import System.Console.Haskeline.LineState
 import System.Console.Haskeline.Prefs
 import System.Console.Haskeline.Completion
 import System.Console.Haskeline.Monads
+import System.Console.Haskeline.Style
 
 import Data.List(transpose, unfoldr)
 
@@ -94,7 +95,7 @@ askFirst prefs n cmd
             ]
     | otherwise = cmd
 
-pageCompletions :: MonadReader Layout m => [String] -> CmdM m ()
+pageCompletions :: MonadReader Layout m => [StyledText String] -> CmdM m ()
 pageCompletions [] = return ()
 pageCompletions wws@(w:ws) = do
     _ <- setState $ Message "----More----"
@@ -108,7 +109,7 @@ pageCompletions wws@(w:ws) = do
     oneLine = clearMessage >> effect (PrintLines [w]) >> pageCompletions ws
     clearMessage = effect $ LineChange $ const ([],[])
 
-printPage :: MonadReader Layout m => [String] -> CmdM m ()
+printPage :: MonadReader Layout m => [StyledText String] -> CmdM m ()
 printPage ls = do
     layout <- ask
     let (ps,rest) = splitAt (height layout - 1) ls
@@ -117,7 +118,7 @@ printPage ls = do
 
 -----------------------------------------------
 -- Splitting the list of completions into lines for paging.
-makeLines :: [String] -> Layout -> [String]
+makeLines :: [String] -> Layout -> [StyledText String]
 makeLines ws layout = let
     minColPad = 2
     printWidth = width layout
@@ -126,7 +127,7 @@ makeLines ws layout = let
     ls = if maxWidth >= printWidth
                     then map (: []) ws
                     else splitIntoGroups numCols ws
-    in map (padWords maxWidth) ls
+    in map (PlainText . padWords maxWidth) ls
 
 -- Add spaces to the end of each word so that it takes up the given visual width.
 -- Don't pad the word in the last column, since printing a space in the last column

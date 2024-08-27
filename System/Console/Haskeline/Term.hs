@@ -5,6 +5,7 @@ import System.Console.Haskeline.LineState
 import System.Console.Haskeline.Key
 import System.Console.Haskeline.Prefs(Prefs)
 import System.Console.Haskeline.Completion(Completion)
+import System.Console.Haskeline.Style(StyledText)
 
 import Control.Concurrent
 import Control.Concurrent.STM
@@ -28,7 +29,7 @@ import qualified Data.ByteString.Char8 as BC
 class (MonadReader Layout m, MonadIO m, MonadMask m) => Term m where
     reposition :: Layout -> LineChars -> m ()
     moveToNextLine :: LineChars -> m ()
-    printLines :: [String] -> m ()
+    printLines :: [StyledText String] -> m ()
     drawLineDiff :: LineChars -> LineChars -> m ()
     clearLayout :: m ()
     ringBell :: Bool -> m ()

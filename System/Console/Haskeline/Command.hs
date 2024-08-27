@@ -34,9 +34,10 @@ import Control.Monad(ap, mplus, liftM)
 import Control.Monad.Trans.Class
 import System.Console.Haskeline.LineState
 import System.Console.Haskeline.Key
+import System.Console.Haskeline.Style
 
 data Effect = LineChange (Prefix -> LineChars)
-              | PrintLines [String]
+              | PrintLines [StyledText String]
               | ClearScreen
               | RingBell
 

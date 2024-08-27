@@ -7,7 +7,8 @@ module System.Console.Haskeline.Backend.Terminfo(
                             )
                              where
 
-import System.Console.Terminfo
+import System.Console.Terminfo hiding (Color)
+import qualified System.Console.Terminfo as TI
 import Control.Monad
 import Control.Monad.Catch
 import Data.List(foldl')
@@ -22,6 +23,7 @@ import System.Console.Haskeline.Term
 import System.Console.Haskeline.Backend.Posix
 import System.Console.Haskeline.Backend.WCWidth
 import System.Console.Haskeline.Key
+import System.Console.Haskeline.Style
 
 import qualified Control.Monad.Trans.Writer as Writer
 
@@ -201,8 +203,34 @@ output t = Writer.tell t  -- NB: explicit argument enables build with ghc-6.12.3
                           -- (Probably related to the monomorphism restriction;
                           -- see GHC ticket #1749).
 
-outputText :: String -> ActionM ()
-outputText s = output (const (termText s))
+toTIColor :: Color -> TI.Color
+toTIColor = undefined
+
+withAttr :: TermStr s
+  => StyleAttr
+  -> Capability (s -> s)
+withAttr (WithFgColor c) = withForegroundColor <*> pure (toTIColor c)
+withAttr (WithBgColor c) = withBackgroundColor <*> pure (toTIColor c)
+
+withAttrs :: TermStr s
+  => StyleAttrs
+  -> Capability (s -> s)
+withAttrs (StyleAttrs attrs) = sequence $ withAttr <$> attrs
+
+toTermStr :: TermStr s
+  => Terminal
+  -> StyledText s
+  -> Maybe s
+toTermStr _ (PlainText s) = Just s
+toTermStr t (FancyText attrs s) = getCapability t (withAttrs attrs) <*> pure s
+toTermStr t (FancyTextGroup ss) = sequence $ toTermStr t <$> ss
+
+outputText :: StyledText String -> ActionM ()
+outputText s = do
+  termStr <- lift . lift . liftIO $ do
+    terminal <- setupTermFromEnv
+    toTermStr terminal s
+  output (const (termText termStr))
 
 left,right,up :: Int -> TermAction
 left = flip leftA

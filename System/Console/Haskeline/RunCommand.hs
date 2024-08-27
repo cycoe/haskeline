@@ -6,6 +6,7 @@ import System.Console.Haskeline.LineState
 import System.Console.Haskeline.Monads
 import System.Console.Haskeline.Prefs
 import System.Console.Haskeline.Key
+import System.Console.Haskeline.Style
 
 import Control.Exception (SomeException)
 import Control.Monad
@@ -65,7 +66,7 @@ runCommandLoop' liftE tops prefix initState cmds getEvent = do
 printPreservingLineChars :: Term m => LineChars -> String -> m ()
 printPreservingLineChars s str =  do
     clearLine s
-    printLines . lines $ str
+    printLines . fmap PlainText . lines $ str
     drawLine s
 
 drawReposition :: (Term n, MonadState Layout m)
